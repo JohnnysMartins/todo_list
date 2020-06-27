@@ -11,8 +11,6 @@ class TodoList extends StatefulWidget {
 class _TodoListState extends State<TodoList> {
   final newItemController = TextEditingController();
   List todoList = [];
-  Map<String, dynamic> lastRemoved;
-  int lastRemovedIndex;
   final repository = TodoRepository();
 
   Future refresh() async {
@@ -129,9 +127,9 @@ class _TodoListState extends State<TodoList> {
         },
       ),
       onDismissed: (direction) {
+        Map<String, dynamic> lastRemoved;
         setState(() {
           lastRemoved = Map.from(todoList[index]);
-          lastRemovedIndex = index;
           todoList.removeAt(index);
           repository.saveDate(todoList);
         });
