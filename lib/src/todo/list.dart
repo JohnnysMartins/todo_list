@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'todo.dart';
 import 'repository.dart';
 
 class TodoList extends StatefulWidget {
@@ -10,39 +12,29 @@ class TodoList extends StatefulWidget {
 
 class _TodoListState extends State<TodoList> {
   final newItemController = TextEditingController();
-  List todoList = [];
+  List<Todo> todoList = [];
   final repository = TodoRepository();
 
   Future refresh() async {
     await Future.delayed(Duration(seconds: 1));
     setState(() {
       todoList.sort((a, b) {
-        if (a["ok"] && !b["ok"]) return 1;
-        if (!a["ok"] && b["ok"]) return -1;
+        if (a.ok && !b.ok) return 1;
+        if (!a.ok && b.ok) return -1;
         return 0;
       });
     });
     repository.saveDate(todoList);
   }
 
-//  @override
-//  void initState() {
-//    super.initState();
-//
-//    getData().then((data) => {todoList = data});
-//  }
-
   Future getData() async {
     await Future.delayed(Duration(seconds: 2));
-    String data = await repository.readData();
-    return json.decode(data);
-  }
+    return repository.readData();
+ }
 
   void addTodo() {
     setState(() {
-      Map<String, dynamic> newItem = Map();
-      newItem["title"] = newItemController.text;
-      newItem["ok"] = false;
+      Todo newItem = Todo(newItemController.text, false);
       newItemController.clear();
       todoList.add(newItem);
       repository.saveDate(todoList);
@@ -55,6 +47,7 @@ class _TodoListState extends State<TodoList> {
       future: getData(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
+          print(snapshot.error);
           return Center(child: Text("can't retrieve data"));
         }
 
@@ -114,27 +107,27 @@ class _TodoListState extends State<TodoList> {
       ),
       key: UniqueKey(),
       child: CheckboxListTile(
-        title: Text(todoList[index]["title"]),
-        value: todoList[index]["ok"],
+        title: Text(todoList[index].title),
+        value: todoList[index].ok,
         secondary: CircleAvatar(
-          child: Icon(todoList[index]["ok"] ? Icons.check : Icons.error),
+          child: Icon(todoList[index].ok ? Icons.check : Icons.error),
         ),
         onChanged: (value) {
           setState(() {
-            todoList[index]["ok"] = value;
+            todoList[index].ok = value;
             repository.saveDate(todoList);
           });
         },
       ),
       onDismissed: (direction) {
-        Map<String, dynamic> lastRemoved;
+        Todo lastRemoved;
         setState(() {
-          lastRemoved = Map.from(todoList[index]);
+          lastRemoved = todoList[index];
           todoList.removeAt(index);
           repository.saveDate(todoList);
         });
         final snack = SnackBar(
-          content: Text("Item ${lastRemoved["title"]} removed"),
+          content: Text("Item ${lastRemoved.title} removed"),
           action: SnackBarAction(
             label: "undo",
             onPressed: () {

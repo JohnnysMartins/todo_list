@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'todo.dart';
 
 class TodoRepository {
   Future<File> getFile() async {
@@ -9,20 +10,26 @@ class TodoRepository {
     return File("${directory.path}/data.json");
   }
 
-  void saveDate(List todoList) async {
-    String data = json.encode(todoList);
+  void saveDate(List<Todo> todoList) async {
+    var mappedList = [];
+    todoList.forEach((element) {
+      mappedList.add({"title": element.title, "ok": element.ok});
+    });
+    String data = json.encode(mappedList);
     final file = await getFile();
     file.writeAsString(data);
   }
 
-  Future<String> readData() async {
+  Future<List<Todo>> readData() async {
     try {
       final file = await getFile();
+      var data = await file.readAsString();
+      List resultJson = json.decode(data);
 
-      return file.readAsString();
+      return List.generate(
+          resultJson.length, (index) => Todo.fromJson(resultJson[index]));
     } catch (err) {
-      print(err);
-      return null;
+      return [];
     }
   }
 }
